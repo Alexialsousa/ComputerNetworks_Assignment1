@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
 import argparse
-import sys, socket
 import validators
 from http_requests import get
 
 def main():
+
+    # arguments
+    verbose = False
+
     parser = argparse.ArgumentParser(add_help=False, prog="httpc")
     subparsers = parser.add_subparsers(dest="command")
 
@@ -46,16 +49,16 @@ def main():
                 print("data: "+ args.d)
             elif args.f:
                 print("file: "+ args.f)
-            get(args.url[0])
         else:
             print("Please input a correct URL")
 
     elif args.command == "get":
         if len(args.url) > 0 and validate_url(args.url[0]):
             if args.v:
-                print("verbosity turned on")
+                verbose = True
             if args.h:
                 print("headers: " + args.h)
+            get(args.url[0], verbose)
         else:
             print("Please input a correct URL")
 
