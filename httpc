@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 import argparse
-from queue import Empty
-import sys
-# import requests
+import sys, socket
+import validators
+from http_requests import get
+
 def main():
     parser = argparse.ArgumentParser(add_help=False, prog="httpc")
     subparsers = parser.add_subparsers(dest="command")
@@ -11,12 +12,13 @@ def main():
     get_parser = subparsers.add_parser("get", add_help=False)
     get_parser.add_argument("-v", action="store_true")
     get_parser.add_argument("-h", metavar="KEY:VALUE")
-    get_parser.add_argument("-u", action="store", type=str)
+    get_parser.add_argument('url', nargs=argparse.REMAINDER)
 
     post_parser = subparsers.add_parser("post", add_help=False)
     post_parser.add_argument("-v", action="store_true")
     post_parser.add_argument("-h", metavar="KEY:VALUE")
-    post_parser.add_argument("-u", action="store", type=str)
+    post_parser.add_argument('url', nargs=argparse.REMAINDER)
+
     post_group = post_parser.add_mutually_exclusive_group(required=True)
     post_group.add_argument("-d", help="Associates an inline data to the body HTTP POST request.", action="store", type=str)
     post_group.add_argument("-f", help="Associates the content of a file to the body HTTP POST request.", action="store_true")
@@ -25,8 +27,7 @@ def main():
     help_parser.add_argument('help', default='None', const='None', nargs='?', choices=["get", "post", "None"])
 
     args = parser.parse_args()
-    print(args)
-
+  
     if args.command == "help":
         if args.help == "get":
             return get_helpFunction()
@@ -36,28 +37,31 @@ def main():
            return httpc_helpFunction()
 
     elif args.command == "post":
-        if args.v:
-            print("verbosity turned on")
-        if args.h:
-            print("headers: " + args.h)
-        if args.d:
-            print("data: "+ args.d)
-        elif args.f:
-            print("file: "+ args.f)
+        if len(args.url) > 0 and validate_url(args.url[0]):
+            if args.v:
+                print("verbosity turned on")
+            if args.h:
+                print("headers: " + args.h)
+            if args.d:
+                print("data: "+ args.d)
+            elif args.f:
+                print("file: "+ args.f)
+            get(args.url[0])
+        else:
+            print("Please input a correct URL")
 
     elif args.command == "get":
-        if args.v:
-            print("verbosity turned on")
-        if args.h:
-            print("headers: " + args.h)
-        if args.u is None:
-            print("Pleases write a valid URL")
-        else :
-            print(args.u)
+        if len(args.url) > 0 and validate_url(args.url[0]):
+            if args.v:
+                print("verbosity turned on")
+            if args.h:
+                print("headers: " + args.h)
+        else:
+            print("Please input a correct URL")
 
     else:
         return httpc_helpFunction()
-        
+
 
 def get_helpFunction():
     print("""httpc help get\n
@@ -86,6 +90,10 @@ The commands are:
         post executes a HTTP POST request and prints the response.
         help prints this screen.\n
 Use "httpc help [command]" for more information about a command.""")
+
+def validate_url(url):
+    valid=validators.url(url)
+    return valid
 
 if __name__ == "__main__":
     main()
