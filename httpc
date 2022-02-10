@@ -4,20 +4,88 @@ import argparse
 from queue import Empty
 import sys
 # import requests
+def main():
+    parser = argparse.ArgumentParser(add_help=False, prog="httpc")
+    subparsers = parser.add_subparsers(dest="command")
 
-parser = argparse.ArgumentParser(add_help=False, prog="httpc")
+    get_parser = subparsers.add_parser("get", add_help=False)
+    get_parser.add_argument("-v", action="store_true")
+    get_parser.add_argument("-h", metavar="KEY:VALUE")
+    get_parser.add_argument("-u", action="store", type=str)
 
-#### Global arguments
-parser.add_argument("-v", help="Prints the detail of the response such as protocol, status, and headers.", action="store_true")
-parser.add_argument("-h", help="Associates headers to HTTP Request with the format 'key:value'.", metavar="KEY:VALUE")
-parser.add_argument("-u", help="input URL",  action="store", type=str)
+    post_parser = subparsers.add_parser("post", add_help=False)
+    post_parser.add_argument("-v", action="store_true")
+    post_parser.add_argument("-h", metavar="KEY:VALUE")
+    post_parser.add_argument("-u", action="store", type=str)
+    post_group = post_parser.add_mutually_exclusive_group(required=True)
+    post_group.add_argument("-d", help="Associates an inline data to the body HTTP POST request.", action="store", type=str)
+    post_group.add_argument("-f", help="Associates the content of a file to the body HTTP POST request.", action="store_true")
 
-subparsers = parser.add_subparsers(dest="command")
+    help_parser = subparsers.add_parser("help")
+    help_parser.add_argument('help', default='None', const='None', nargs='?', choices=["get", "post", "None"])
 
-get_parser = subparsers.add_parser("get")
-post_parser = subparsers.add_parser("post")
-help_parser = subparsers.add_parser("help")
+    args = parser.parse_args()
+    print(args)
 
-group = post_parser.add_mutually_exclusive_group(required=True)
-group.add_argument("-d", help="Associates an inline data to the body HTTP POST request.", action="store", type=str)
-group.add_argument("-f", help="Associates the content of a file to the body HTTP POST request.", action="store_true")
+    if args.command == "help":
+        if args.help == "get":
+            return get_helpFunction()
+        elif args.help == "post":
+            return post_helpFunction()
+        elif args.help == "None":
+           return httpc_helpFunction()
+
+    elif args.command == "post":
+        if args.v:
+            print("verbosity turned on")
+        if args.h:
+            print("headers: " + args.h)
+        if args.d:
+            print("data: "+ args.d)
+        elif args.f:
+            print("file: "+ args.f)
+
+    elif args.command == "get":
+        if args.v:
+            print("verbosity turned on")
+        if args.h:
+            print("headers: " + args.h)
+        if args.u is None:
+            print("Pleases write a valid URL")
+        else :
+            print(args.u)
+
+    else:
+        return httpc_helpFunction()
+        
+
+def get_helpFunction():
+    print("""httpc help get\n
+usage: httpc get [-v] [-h key:value] URL\n
+Get executes a HTTP GET request for a given URL.\n
+    -v Prints the detail of the response such as protocol, status,and headers.
+    -h key:value Associates headers to HTTP Request with the format 'key:value'.""")
+
+def post_helpFunction():
+    print("""httpc help post\n
+usage: httpc post [-v] [-h key:value] [-d inline-data] [-f file] URL\n
+Post executes a HTTP POST request for a given URL with inline data or from file.\n
+    -v Prints the detail of the response such as protocol, status, and headers.
+    -h key:value Associates headers to HTTP Request with the format 'key:value'.
+    -d string Associates an inline data to the body HTTP POST request.
+    -f file Associates the content of a file to the body HTTP POST request.\n
+Either [-d] or [-f] can be used but not both.""")
+
+def httpc_helpFunction():
+    print("""httpc help\n
+httpc is a curl-like application but supports HTTP protocol only.
+Usage:
+        httpc command [arguments]
+The commands are:
+        get executes a HTTP GET request and prints the response.
+        post executes a HTTP POST request and prints the response.
+        help prints this screen.\n
+Use "httpc help [command]" for more information about a command.""")
+
+if __name__ == "__main__":
+    main()
