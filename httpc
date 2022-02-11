@@ -2,7 +2,7 @@
 
 import argparse
 import validators
-from http_requests import get
+from http_requests import get, post
 
 def main():
 
@@ -42,11 +42,11 @@ def main():
     elif args.command == "post":
         if len(args.url) > 0 and validate_url(args.url[0]):
             if args.v:
-                print("verbosity turned on")
+                verbose = True
             if args.h:
                 print("headers: " + args.h)
             if args.d:
-                print("data: "+ args.d)
+                post(args.d)
             elif args.f:
                 print("file: "+ args.f)
         else:
