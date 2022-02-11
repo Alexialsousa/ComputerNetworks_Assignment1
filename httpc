@@ -2,35 +2,37 @@
 
 import argparse
 import validators
+import sys
 from http_requests import get, post
 
 def main():
 
     # arguments
     verbose = False
+    # sys.argv += '''post -h key1:value1 -h key2:value2 -d "'hello':'hi'" http://httpbin.org/post'''.split()
 
     parser = argparse.ArgumentParser(add_help=False, prog="httpc")
     subparsers = parser.add_subparsers(dest="command")
 
     get_parser = subparsers.add_parser("get", add_help=False)
     get_parser.add_argument("-v", action="store_true")
-    get_parser.add_argument("-h", metavar="KEY:VALUE")
-    get_parser.add_argument('url', nargs=argparse.REMAINDER)
+    get_parser.add_argument("-h", metavar="KEY:VALUE", type=list, nargs=1)
+    get_parser.add_argument('url', nargs='*')
 
     post_parser = subparsers.add_parser("post", add_help=False)
     post_parser.add_argument("-v", action="store_true")
-    post_parser.add_argument("-h", metavar="KEY:VALUE")
-    post_parser.add_argument('url', nargs=argparse.REMAINDER)
+    post_parser.add_argument("-h", metavar="KEY:VALUE", action="append", nargs=1)
 
     post_group = post_parser.add_mutually_exclusive_group(required=True)
-    post_group.add_argument("-d", help="Associates an inline data to the body HTTP POST request.", action="store", type=str)
-    post_group.add_argument("-f", help="Associates the content of a file to the body HTTP POST request.", action="store_true")
+    post_group.add_argument("-d", action='store', type=str)
+    post_group.add_argument("-f", action="store_true")
+    post_parser.add_argument('url', nargs='*')
 
     help_parser = subparsers.add_parser("help")
     help_parser.add_argument('help', default='None', const='None', nargs='?', choices=["get", "post", "None"])
 
     args = parser.parse_args()
-  
+
     if args.command == "help":
         if args.help == "get":
             return get_helpFunction()
@@ -43,12 +45,8 @@ def main():
         if len(args.url) > 0 and validate_url(args.url[0]):
             if args.v:
                 verbose = True
-            if args.h:
-                print("headers: " + args.h)
-            if args.d:
-                post(args.d)
-            elif args.f:
-                print("file: "+ args.f)
+            if args.d or args.f:
+                post(args.url[0],verbose, args.d, args.h)
         else:
             print("Please input a correct URL")
 
@@ -57,8 +55,8 @@ def main():
             if args.v:
                 verbose = True
             if args.h:
-                print("headers: " + args.h)
-            get(args.url[0], verbose)
+                headers = args.h
+            get(args.url[0], verbose, headers)
         else:
             print("Please input a correct URL")
 
