@@ -1,35 +1,35 @@
 #!/usr/bin/env python
 
 import argparse
-import validators
 import sys
-from http_requests import get, post
+import validators
+from http_requests import request
+
 
 def main():
 
-    # arguments
+    sys.argv += '''post -h key1:value1 -d "test" http://httpbin.org/post'''.split()
     verbose = False
-    # sys.argv += '''post -h key1:value1 -h key2:value2 -d "'hello':'hi'" http://httpbin.org/post'''.split()
-
     parser = argparse.ArgumentParser(add_help=False, prog="httpc")
     subparsers = parser.add_subparsers(dest="command")
 
     get_parser = subparsers.add_parser("get", add_help=False)
     get_parser.add_argument("-v", action="store_true")
-    get_parser.add_argument("-h", metavar="KEY:VALUE", type=list, nargs=1)
-    get_parser.add_argument('url', nargs='*')
+    get_parser.add_argument("-h", default=None, metavar="KEY:VALUE", action='append', nargs=1)
+    get_parser.add_argument('url', nargs=argparse.REMAINDER)
 
     post_parser = subparsers.add_parser("post", add_help=False)
     post_parser.add_argument("-v", action="store_true")
-    post_parser.add_argument("-h", metavar="KEY:VALUE", action="append", nargs=1)
+    post_parser.add_argument("-h", default=None, metavar="KEY:VALUE", action='append', nargs=1)
+    post_parser.add_argument('url', nargs=argparse.REMAINDER)
 
     post_group = post_parser.add_mutually_exclusive_group(required=True)
-    post_group.add_argument("-d", action='store', type=str)
-    post_group.add_argument("-f", action="store_true")
-    post_parser.add_argument('url', nargs='*')
+    post_group.add_argument("-d", default=None, action="store")
+    post_group.add_argument("-f", default=None, action="store_true")
 
     help_parser = subparsers.add_parser("help")
-    help_parser.add_argument('help', default='None', const='None', nargs='?', choices=["get", "post", "None"])
+    help_parser.add_argument(
+        'help', default='None', const='None', nargs='?', choices=["get", "post", "None"])
 
     args = parser.parse_args()
 
@@ -39,26 +39,24 @@ def main():
         elif args.help == "post":
             return post_helpFunction()
         elif args.help == "None":
-           return httpc_helpFunction()
+            return httpc_helpFunction()
 
-    elif args.command == "post":
+    elif args.command == "post" or args.command == "get" :
         if len(args.url) > 0 and validate_url(args.url[0]):
             if args.v:
                 verbose = True
-            if args.d or args.f:
-                post(args.url[0],verbose, args.d, args.h)
+            if args.command == "get":
+                if args.h:
+                    request(args.command.upper(), args.url[0], verbose, None, args.h)
+                else:
+                    request(args.command.upper(), args.url[0], verbose, None, None)
+            elif args.command == "post":
+                if args.d == None:
+                    request(args.command.upper(), args.url[0], verbose, args.f, args.h)
+                elif args.f == None:
+                    request(args.command.upper(), args.url[0], verbose, args.d, args.h)
         else:
-            print("Please input a correct URL")
-
-    elif args.command == "get":
-        if len(args.url) > 0 and validate_url(args.url[0]):
-            if args.v:
-                verbose = True
-            if args.h:
-                headers = args.h
-            get(args.url[0], verbose, headers)
-        else:
-            print("Please input a correct URL")
+            print("Please input a correct URL" + args.url[0] + " d: " + args.d)
 
     else:
         return httpc_helpFunction()
@@ -93,7 +91,7 @@ The commands are:
 Use "httpc help [command]" for more information about a command.""")
 
 def validate_url(url):
-    valid=validators.url(url)
+    valid = validators.url(url)
     return valid
 
 if __name__ == "__main__":
