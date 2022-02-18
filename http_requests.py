@@ -6,13 +6,14 @@ def request(command, url, verbose, data, headers):
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((host, 80))
-    message = str.encode(command + ' ' + args + ' HTTP/1.1\r\n')
+    message = str.encode(command + ' ' + args + ' HTTP/1.0\r\n')
     message += str.encode('Host: ' + host + ':80\r\n')
 
-    for header in headers:
-        index = header[0].find(':') + 1
-        header = header[0][:index] + " " + header[0][index:]
-        message += str.encode(header + "\r\n")
+    if headers is not None:
+        for header in headers:
+            index = header[0].find(':') + 1
+            header = header[0][:index] + " " + header[0][index:]
+            message += str.encode(header + "\r\n")
 
     if data is not None:
         if message.find(b'Content-Length:') == -1:
