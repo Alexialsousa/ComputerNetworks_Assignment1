@@ -4,7 +4,6 @@ import argparse
 import validators
 from http_requests import request
 
-
 def main():
 
     verbose = False
@@ -50,7 +49,8 @@ def main():
                     request(args.command.upper(), args.url[0], verbose, None, None)
             elif args.command == "post":
                 if args.d == None:
-                    with open('ComputerNetworks_Assignment1/' + args.f) as f: d = f.read()
+                    with open(args.f) as f:
+                        d = f.read()
                     request(args.command.upper(), args.url[0], verbose, d, args.h)
                 elif args.f == None:
                     request(args.command.upper(), args.url[0], verbose, args.d, args.h)

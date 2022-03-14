@@ -5,7 +5,7 @@ def request(command, url, verbose, data, headers):
     args = '/' + url.split('//')[1].split('/')[1]
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((host, 80))
+    s.connect((host, 8037))
     message = str.encode(command + ' ' + args + ' HTTP/1.0\r\n')
     message += str.encode('Host: ' + host + ':80\r\n')
 
@@ -33,5 +33,3 @@ def request(command, url, verbose, data, headers):
         print(head + "\n")
     print(body)
     s.close()
-
-     
